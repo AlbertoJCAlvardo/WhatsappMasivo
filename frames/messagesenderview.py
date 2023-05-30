@@ -1,26 +1,22 @@
-from tkinter import Frame,Label, Entry,Button,PhotoImage,Text,END,Listbox
-from tkinter import ttk
 import os
-
+from tkinter import (END, Button, Entry, Frame, Label, Listbox, PhotoImage,
+                     Text, messagebox, ttk)
+from utils.formatter import Formatter
 
 class MessageSenderView(ttk.Frame):
     def __init__(self,parent,controller):
         ttk.Frame.__init__(self,parent)
         
-        
-
 
         self.controller = controller
         
+        self.formatter = Formatter()
+
         self.message = f""
 
-        for i in range(10):        
-            self.grid_columnconfigure(i,weight=1)
-            self.grid_rowconfigure(i,weight=1)
-         
 
-        self.header = ttk.Label(self, text="Mensaje a enviar",font=(50))
-        self.header.grid(row=0, column=4,columnspan=2,padx=10,pady=10)
+        self.header = ttk.Label(self, text="Modificar Mensaje",font=('bold',30))
+        self.header.place(x=20, y=20)
         self.del_switch = False
         
 
@@ -29,10 +25,12 @@ class MessageSenderView(ttk.Frame):
         if self.controller.data is not None:
             self.columns  = list(self.controller.data.columns)
         else:
+        
             self.columns = ["No hay datos"]
 
         path = os.path.join(os.getcwd(),"DefaultText")
         
+
         self.default_message = ""
         
         if os.path.isfile("defaut_message.txt"):
@@ -54,26 +52,47 @@ class MessageSenderView(ttk.Frame):
         for i in range(len(self.columns)):
             self.listbox.insert(i,self.columns[i])
 
-        self.listbox.grid(row=1,column=2,padx=10,pady=10)
+        self.listbox.place(x=500,y=130,height=200,width=160)
 
-        self.message_box = Text(self,height=20, width=60)
-        self.message_box.grid(row=1,column=1,padx=5,pady=0)
+        self.message_box = Text(self)
+        self.message_box.place(x=20,y=130,height=300,width=450)
         self.message_box.insert("1.0",self.default_message)
-        self.bind("<Button-1>",lambda : self.switch_delete())
+        self.message_box.bind("<Button-1>",lambda event:self.switch_delete())
+
+
+        self.bind("<Button-1>",lambda event:self.set_default_message())
 
         direct = os.path.join(os.getcwd(),"Icons/arrow_icon.png")
         #photo = PhotoImage(file = direct)
 
         self.next_button = ttk.Button(self,text="Capturar mensaje",command=self.capture_message)
-        self.next_button.grid(row=7,column=8,padx=10,pady=10)
+        self.next_button.place(x=780,y=160,height=60,width=160)
+        
+        self.errase_button = ttk.Button(self,text="Borrar",command=self.clear_box)
+        self.errase_button.place(x=780,y=250,height=60,width=160)
+        
+        self.back_button = ttk.Button(self,text="Volver",command=self.quit)
+        self.back_button.place(x=780,y=340,height=60,width=160)
 
-        self.back_button = ttk.Button(self,text="Volver",command=self.controller.back)
-        self.back_button.grid(row = 7,column=7,padx=10,pady=10)
-        
-        
+
         self.insert_button = ttk.Button(self,text="Insertar",command=self.insert_column)
-        self.insert_button.grid(row=3,column=2,padx=10,pady=10)
+        self.insert_button.place(x=510 ,y=340,height=40,width=140)
+        
+        self.try_button = ttk.Button(self,text="Mostrar ejemplo",command=self.show_example)
+        self.try_button.place(x=510, y=390, height=40,width=140)
+        
+        self.example =  ""
+        self.title_example_label = ttk.Label(self,text="Ejemplo:",font=(8))
+        self.title_example_label.place(x=0,y=0,height=0,width=0)
 
+        self.example_label = ttk.Label(self,text=self.example,font=(8))
+        self.example_label.place(x=0,y=0,height=0,width=0)
+        
+
+
+
+        
+        
     def update_list(self): 
         self.columns = []
         print("Actualizando en msv")
@@ -81,26 +100,84 @@ class MessageSenderView(ttk.Frame):
         self.listbox.delete(0,END)
         for i in self.columns:
             self.listbox.insert(END,i)
-        self.message = self.defaut_message
+        self.message = self.default_message
         self.controller.message = f""
-        self.message_box.delete(0,END)
-
+        self.message_box.delete("1.0",END)
+        self.message_box.insert("1.0",self.default_message)
+        self.del_switch = False
+        
     def switch_delete(self):
         if self.del_switch == False:
             self.message_box.delete("1.0",END)
             self.del_switch = True
 
+
+    def quit(self):
+        if self.message == "":
+            self.message_box.delete("1.0","end-1c")
+            self.del_switch = False
+            self.controller.back()
+        elif self.message != self.message_box.get("1.0","end-1c"):
+            self.message_box.delete("1.0","end-1c")
+            self.message_box.insert("1.0",self.message)
+            self.controller.back()
+        self.drop_example()
+
     def insert_column(self):
-
+    
          index = self.listbox.curselection()
-         print(index)
-         if index != 0:
-            self.message = self.message_box.get("1.0",END) + "{"+self.listbox.get(index)+"}"
-            self.controller.message += f"'{self.listbox.get(index)}'"
+         if len(index)>0:
+            if self.listbox.get(index) != "No hay datos":
+                if self.message_box.get("1.0","end-1c") != self.default_message:
+                    self.message = self.message_box.get("1.0",END).split("\n")[0] + " {"+self.listbox.get(index)+"}"
+                else:
+                    self.message = "{"+self.listbox.get(index)+"}"
 
-            self.message_box.delete("1.0",END)
-            self.message_box.insert(0,self.message)
-                  
+                self.message_box.delete("1.0",END)
+                self.message_box.insert("1.0",self.message)
+                      
     def capture_message(self):
-        self.controller.message = self.message_box.get("1.0","end-1c")
+        if self.message_box.get("1.0","end-1c") != self.default_message:
+            self.message = self.message_box.get("1.0","end-1c")
+            self.controller.message = self.message_box.get("1.0","end-1c")
+        else:
+            self.message = ""
+            self.default_message = ""
+        messagebox.showinfo(message="Mensaje actualizado con exito")
+        self.controller.update_message()
+        if self.message == "":
+            self.del_switch = False
+            self.switch_delete()
+            self.del_switch = False
+
         self.controller.back()
+        self.drop_example()
+    def show_example(self):
+        print(self.controller.candidate,type(self.controller.candidate))
+        self.example = self.formatter.format_string(self.message_box.get("1.0","end-1c"),self.controller.candidate)
+        print(self.example)
+        self.up_example()
+        self.example_label.configure(text=self.example)
+
+    def up_example(self):
+        self.title_example_label.place(x=20,y=480,height=30,width=70)
+        self.example_label.place(x=20,y=510,height=100,width=800)
+    def drop_example(self):
+        self.title_example_label.place(x=0,y=0,height=0,width=0)
+        self.example_label.place(x=0,y=0)
+        self.example = ""
+        self.example.configure(text=self.example)
+
+
+    
+    def clear_box(self):
+        self.message_box.delete("1.0",END)
+        self.del_switch = False
+        self.switch_delete()
+        self.message  = ""
+    def set_default_message(self):
+        if self.message_box.get("1.0","end-1c") == "":
+            self.message_box.delete("1.0",END)
+            self.message_box.insert("1.0",self.default_message)
+            self.del_switch = False
+

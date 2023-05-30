@@ -11,7 +11,8 @@ class View(Frame):
         
         self.data = None
         self.message = f""
-        
+        self.filename = f""
+        self.candidate = None
         self.pack(side='top', fill="both",expand=True)
  
         
@@ -39,9 +40,13 @@ class View(Frame):
     
     def back(self):
         self.show_frame(HomeView)
-
+    
+    def update_message(self):
+        self.frames[HomeView].update_message()
     def update_list(self):
         self.frames[MessageSenderView].update_list()
+    def update_filename(self):
+        self.frames[HomeView].update_filename()
 
     def start_mainloop(self):
         self.root.mainloop()

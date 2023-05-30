@@ -13,13 +13,11 @@ class DataObtentionView(ttk.Frame):
             self.grid_columnconfigure(i,weight = 1)
             self.grid_rowconfigure(i,weight = 1)
        
-        self.header = ttk.Label(self, text="Seleccione un Archivo",font=(30))
-        self.header.grid(row=0, column=0, padx=10, pady=10)
-
+        self.header = ttk.Label(self, text="Seleccione un Archivo",font=("bold",30))
+        self.header.place(x=40,y=20)
         
         self.search_button = ttk.Button(self,text="Buscar",command=self.open_file)
-        self.search_button.grid(row=1,column=7, padx=10,pady=10)
-        
+        self.search_button.place(x=800,y=110,height=60,width=160)
         
         direct = os.path.join(os.getcwd(),"Icons/arrow_icon.png")
          
@@ -28,22 +26,24 @@ class DataObtentionView(ttk.Frame):
         #self.table_text.grid(row=1,column=0)
         
 
-        self.table = ttk.Treeview(self,show="headings",height="5",columns=(1,2,3,4))
+        self.table = ttk.Treeview(self,show="headings",height="100",columns=(1,2,3,4))
         for i in range(4):
             self.table.column(i+1,width=100)
 
-        self.table.grid(row=1,column=0)
+        self.table.place(x=40,y=100,height=400,width=600)
         #photo = PhotoImage(file = direct)
 
         self.style = ttk.Style(self)
         self.style.configure("Treeview",font=(None,8),columnspan=80)
         self.style.configure("Treeview.Heading",font=(None,8))
         self.next_button = ttk.Button(self,text="Volver",command=self.get_data)
-        self.next_button.grid(row=7,column=7,padx=5,pady=10,columnspan=80)
-        
+        self.next_button.place(x=800,y=420,height=60,width=160)
 
+        
     def get_data(self):
             if self.controller.data is not None:
+                self.controller.candidate = self.data.loc[0]
+                self.controller.update_filename()
                 self.controller.back()
             else:
                 if messagebox.askokcancel(message="Desea salir sin seleccionar un archivo? "):
@@ -57,9 +57,10 @@ class DataObtentionView(ttk.Frame):
                                                 filetypes = (("Archivos Excel",
                                                                 "*.xlsx"),
                                                                 ("CSV","*.csv")))
-            
+                 
             correct = False
-            print(f"\n\n{filename}\n\n")
+            
+            
 
             if filename.split(".")[1] == "xlsx":
                     
@@ -68,8 +69,8 @@ class DataObtentionView(ttk.Frame):
                     self.data = data
                     correct = True
                     messagebox.showinfo(message="Archivo Seleccionado")
-
-
+                    fnl = filename.split("/")
+                   
                 else:
                     messagebox.showinfo(message="Error de Formato, el archivo debe contener la columna NUMERO_TELEFONO")
                 
@@ -98,16 +99,23 @@ class DataObtentionView(ttk.Frame):
                 l = tuple(l)
                 self.table.configure(columns=l)
                 
-                self.table.column("#0",width=100,anchor="c")
+                self.table.column("#0",width=50,anchor="c")
                 for i in range(len(columns)):
-                    self.table.column(i+1,width=100,anchor="c")
+                    self.table.column(i+1,width=50,anchor="c")
                     self.table.heading(i+1,text=columns[i])
-                for i in range(len(list(data[columns[0]]))):
+                
+                size = len(list(data[columns[0]]))
+
+                if size>40:
+                    size = 40
+                for i in range(size):
                     val = list(data.loc[i])
                     self.table.insert('','end',values=val)
                 
                 self.controller.data = data
                 self.controller.update_list()
+                self.controller.filename = fnl[len(fnl) - 1]
                 
+                    
         except Exception as e:
             print(e)

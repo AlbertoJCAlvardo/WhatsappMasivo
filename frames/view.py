@@ -46,7 +46,11 @@ class View(Frame):
     def update_list(self):
         self.frames[MessageSenderView].update_list()
     def update_filename(self):
+        self.message = None
         self.frames[HomeView].update_filename()
+    
+    def update_root(self):
+        self.root.update()
 
     def start_mainloop(self):
         self.root.mainloop()

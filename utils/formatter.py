@@ -13,16 +13,16 @@ class Formatter:
                 if len(lst2) == 1:
                     key = lst2[0]
                     if key in data.axes[0]:
-                        formatted += f" {data[key]}"
+                        formatted += f"{data[key]}"
                     else:
-                        formatted += f" {{{key}}}"
+                        formatted += f"{{{key}}}"
 
                 if len(lst2) > 0:
                     key = lst2[0]
                     if key in data.axes[0]:
-                        formatted += f" {data[key]}"
+                        formatted += f"{data[key]}"
                     else:
-                        formatted += f" {{{key}}}"
+                        formatted += f"{{{key}}}"
                     formatted += f"{lst2[1]}"
                 
             else:

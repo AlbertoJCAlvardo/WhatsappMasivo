@@ -65,7 +65,8 @@ class MessageSenderView(ttk.Frame):
         direct = os.path.join(os.getcwd(),"Icons/arrow_icon.png")
         #photo = PhotoImage(file = direct)
 
-        self.next_button = ttk.Button(self,text="Capturar mensaje",command=self.capture_message)
+        self.next_button = ttk.Button(self,text="Capturar mensaje",command=self.capture_message )
+
         self.next_button.place(x=780,y=160,height=60,width=160)
         
         self.errase_button = ttk.Button(self,text="Borrar",command=self.clear_box)
@@ -75,7 +76,7 @@ class MessageSenderView(ttk.Frame):
         self.back_button.place(x=780,y=340,height=60,width=160)
 
 
-        self.insert_button = ttk.Button(self,text="Insertar",command=self.insert_column)
+        self.insert_button = ttk.Button(self,text="Insertar",command=self.insert_column )
         self.insert_button.place(x=510 ,y=340,height=40,width=140)
         
         self.try_button = ttk.Button(self,text="Mostrar ejemplo",command=self.show_example)
@@ -123,13 +124,37 @@ class MessageSenderView(ttk.Frame):
         self.controller.back()
 
     def insert_column(self):
+
+        if self.del_switch == False:
+            self.del_switch  = True
+
+
     
-         index = self.listbox.curselection()
-         if len(index)>0:
+        index = self.listbox.curselection()
+
+
+        if len(index)>0:
+
             if self.listbox.get(index) != "No hay datos":
+                
                 if self.message_box.get("1.0","end-1c") != self.default_message:
-                    self.message = self.message_box.get("1.0",END).split("\n")[0] + " {"+self.listbox.get(index)+"}"
+                    cur_text = self.message_box.get("1.0","end-1c")
+                    """
+                    if len(lst)>0:
+                        cur_text = ""
+                        for i in range(len(lst)-1):
+                            cur_text += lst[i]+"\n"
+                    else:
+                        cur_text = lst[0]
+                    """
+                    if cur_text[len(cur_text)-1:len(cur_text)] == " ":
+                         self.message = cur_text + "{"+self.listbox.get(index)+"}"
+
+                    else:
+                        self.message = cur_text + " {"+self.listbox.get(index)+"}"
                 else:
+
+
                     self.message = "{"+self.listbox.get(index)+"}"
 
                 self.message_box.delete("1.0",END)

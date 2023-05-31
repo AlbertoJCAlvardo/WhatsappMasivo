@@ -117,7 +117,7 @@ class DataObtentionView(ttk.Frame):
                     val = list(data.loc[i])
                     self.table.insert('','end',values=val)
                 
-                self.controller.data = data
+                self.controller.data = self.data
                 self.controller.update_list()
                 self.controller.filename = fnl[len(fnl) - 1]
                 

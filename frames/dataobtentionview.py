@@ -17,7 +17,7 @@ class DataObtentionView(ttk.Frame):
         self.header.place(x=40,y=20)
         
         self.search_button = ttk.Button(self,text="Buscar",command=self.open_file)
-        self.search_button.place(x=800,y=110,height=60,width=160)
+        self.search_button.place(x=770,y=170,height=60,width=160)
         
         direct = os.path.join(os.getcwd(),"Icons/arrow_icon.png")
          
@@ -30,14 +30,14 @@ class DataObtentionView(ttk.Frame):
         for i in range(4):
             self.table.column(i+1,width=100)
 
-        self.table.place(x=40,y=100,height=400,width=600)
+        self.table.place(x=40,y=100,height=400,width=650)
         #photo = PhotoImage(file = direct)
 
         self.style = ttk.Style(self)
         self.style.configure("Treeview",font=(None,8),columnspan=80)
         self.style.configure("Treeview.Heading",font=(None,8))
         self.next_button = ttk.Button(self,text="Volver",command=self.get_data)
-        self.next_button.place(x=800,y=420,height=60,width=160)
+        self.next_button.place(x=770,y=370,height=60,width=160)
 
         
     def get_data(self):
@@ -70,7 +70,12 @@ class DataObtentionView(ttk.Frame):
                     correct = True
                     messagebox.showinfo(message="Archivo Seleccionado")
                     fnl = filename.split("/")
-                   
+                    lst = []
+                    for i in list(data["NUMERO_TELEFONO"]):
+                        lst.append(str(i))
+                    data["NUMERO_TELEFONO"] = lst
+                    
+                            
                 else:
                     messagebox.showinfo(message="Error de Formato, el archivo debe contener la columna NUMERO_TELEFONO")
                 

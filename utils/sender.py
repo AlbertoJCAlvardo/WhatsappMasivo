@@ -10,64 +10,70 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+from urllib.parse import quote
 from time import sleep
-from .style import style
+from .style import Style
 
 class Sender():
 
     def __init__(self,debug=False):
-        
-        options = Options()
-        options.add_experimental
-        options.add_argument("--profile-directory=Default")
-        options.add_argument("--user-data-dir=/var/tmp/chrome_user_data")
-        options-add_argument("start-maximized")
-        
-        self.delay = 5
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=options)
-        
+        self.debug = debug
+        self.options = Options()
+        self.options.add_experimental_option("excludeSwitches",["enable-logging"])
+        self.options.add_argument("--profile-directory=Default")
+        self.options.add_argument("--user-data-dir=/var/tmp/chrome_user_data")
+        self.options.add_argument("start-maximized")
+        self.style = Style()       
+        self.delay =55
 
 
     def connect_with_whatsapp(self):
-        
-        driver.get("https://web.whatsapp.com")
+        try:
+            self.driver = webdriver.Chrome(ChromeDriverManager().install(),options=self.options)
+            self.driver.get("https://web.whatsapp.com")
+        except Exception as e:
+            self.style.set_red()
+            self.debug_print("Connecting error")
 
-    def send_message(self,message:str,numbers:list):
+    def send_message(self,message:str,number:str):
         
-        for idx, number in enumerate(numbers):
             number = number.strip()
-            if number == "":
-                continue
-
-            try:
-                url = f"https://web.whatsapp.com/send?phone={number}&text={message}"
-                sent = False
+            if number != "":
                 
                 try:
-                    click_btn = WebDriverWait(self.driver,self.delay).until(
-                            EC.element_to-be_clickable((By.XPATH, "//button[@data-testid='compose-btn-send']")))
-                
-                    if not send:
-                        sleep(1)
-                        click_btn.click()
-                        sent = True
-                        sleep(1)
-                        
+                    url = f"https://web.whatsapp.com/send?phone={number}&text={quote(message)}"
+                    sent = False
+                    for i in range(3):
+                        try:
+                            if not sent:
+                                
+                                self.driver.get(url)
+                                click_btn = WebDriverWait(self.driver,self.delay).until(EC.element_to_be_clickable((By.XPATH, "//button[@data-testid='compose-btn-send']")))
+                                sleep(1)
+                                click_btn.click()
+                                sent = True
+                                sleep(1)
+                                
 
-                        style.set_green()               
-                        self.debug_print(f"Message sent to {number}!")
-                        style.reset()
+                                self.style.set_green()               
+                                self.debug_print(f"Message sent to {number}!")
 
+                                self.style.reset()
+                                
+                        except Exception as e:
+                            
+                            self.debug_print(e)
+                            self.debug_print(f"Failed to send message to {number}")
+                            self.style.reset()
+                            return 0
+
+                    
                 except Exception as e:
-                    style.set_red()
-                    self.debug_print(f"Failed to send message to {number}")
-                    style.reset()
-
-                
-            except Exception as e:
-                style.set_red()
-                self.debug_print("Error with WebDriver")
-                style.reset()
+                    self.style.set_red()
+                    self.debug_print("Error with WebDriver")
+                    self.style.reset()
+                    return 0
+                return 1
 
 
     def debug_print(self,message:str):

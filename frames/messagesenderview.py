@@ -85,8 +85,8 @@ class MessageSenderView(ttk.Frame):
         self.title_example_label = ttk.Label(self,text="Ejemplo:",font=(8))
         self.title_example_label.place(x=0,y=0,height=0,width=0)
 
-        self.example_label = ttk.Label(self,text=self.example,font=(8))
-        self.example_label.place(x=0,y=0,height=0,width=0)
+        self.example_text = Text(self,highlightthickness=0,state="disabled",relief="groove",font=('arial',10))
+        self.example_text.place(x=0,y=0,height=0,width=0)
         
 
 
@@ -113,15 +113,14 @@ class MessageSenderView(ttk.Frame):
 
 
     def quit(self):
-        if self.message == "":
-            self.message_box.delete("1.0","end-1c")
-            self.del_switch = False
-            self.controller.back()
-        elif self.message != self.message_box.get("1.0","end-1c"):
-            self.message_box.delete("1.0","end-1c")
-            self.message_box.insert("1.0",self.message)
-            self.controller.back()
+        self.message_box.delete("1.0","end-1c")
+        self.message_box.insert("1.0", self.default_message)
+
+        if self.message == "" or self.message_box.get("1.0","end-1c")=="":
+           self.del_switch = False
+            
         self.drop_example()
+        self.controller.back()
 
     def insert_column(self):
     
@@ -153,31 +152,42 @@ class MessageSenderView(ttk.Frame):
         self.controller.back()
         self.drop_example()
     def show_example(self):
-        print(self.controller.candidate,type(self.controller.candidate))
-        self.example = self.formatter.format_string(self.message_box.get("1.0","end-1c"),self.controller.candidate)
-        print(self.example)
+        cur_text = self.message_box.get("1.0","end-1c")
+        self.example = ""
+        if cur_text != self.default_message:
+            self.example = self.formatter.format_string(self.message_box.get("1.0","end-1c"),self.controller.candidate)
         self.up_example()
-        self.example_label.configure(text=self.example)
+        self.example_text.configure(state="normal")
+        self.example_text.delete("1.0","end-1c")
+        self.example_text.insert("1.0",self.example)
+        self.example_text.configure(state="disabled")
 
     def up_example(self):
         self.title_example_label.place(x=20,y=480,height=30,width=70)
-        self.example_label.place(x=20,y=510,height=100,width=800)
+        self.example_text.place(x=20,y=510,height=50,width=800)
     def drop_example(self):
         self.title_example_label.place(x=0,y=0,height=0,width=0)
-        self.example_label.place(x=0,y=0)
+        self.example_text.place(x=0,y=0,height=0,width=0)
         self.example = ""
-        self.example.configure(text=self.example)
+        self.example_text.delete("1.0","end-1c")
 
 
     
     def clear_box(self):
         self.message_box.delete("1.0",END)
+        self.message_box.insert("1.0",self.default_message)
         self.del_switch = False
         self.switch_delete()
         self.message  = ""
+        self.drop_example()
+
+
     def set_default_message(self):
-        if self.message_box.get("1.0","end-1c") == "":
+        if self.message_box.get("1.0","end-1c") == "" and self.del_switch == True:
             self.message_box.delete("1.0",END)
             self.message_box.insert("1.0",self.default_message)
             self.del_switch = False
+        if self.del_switch == False and self.message != "":
+            self.message_box.delete("1.0","end-1c")
+            self.message_box.insert("1.0",self.message)
 

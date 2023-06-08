@@ -25,7 +25,7 @@ class Sender():
         self.options.add_argument("--user-data-dir=/var/tmp/chrome_user_data")
         self.options.add_argument("start-maximized")
         self.style = Style()       
-        self.delay = 25
+        self.delay = 10
 
 
     def connect_with_whatsapp(self):
@@ -36,45 +36,133 @@ class Sender():
             self.style.set_red()
             self.debug_print(e)
 
-    def send_message(self,message:str,number:str):
-        
+    def send_message(self,message:str,number:str,wrong_number_list):
+            sent = False
             number = number.strip()
             if number != "":
                 try:
                     url = f"https://web.whatsapp.com/send?phone={number}&text={quote(message)}"
-                    sent = False
-                    for i in range(3):
-                        try:
-                            if not sent:
-                                
-                                self.driver.get(url)
-                                click_btn = WebDriverWait(self.driver,self.delay).until(EC.element_to_be_clickable((By.XPATH, "//button[@data-testid='compose-btn-send']")))
-                                sleep(0.3)
-                                click_btn.click()
-                                sleep(1.2)
-                                sent = True
-                                
-                                
+                    self.driver.get(url)
+                    
+                    error = False
+                    try:
+                        btn_error_ok = WebDriverWait(self.driver,6).until(EC.element_to_be_clickable((By.XPATH,"//button[@data-testid='popup-controls-ok']")))
+                        sleep(0.3)
+                        btn_error_ok.click()
+                        error = True
+                        wrong_number_list.append(number)
+                    except Exception as e:
+                        pass
 
-                                self.style.set_green()               
-                                self.debug_print(f"Message sent to {number}!")
+                    
 
+            
+                    if not error:
+
+                        for i in range(3):
+                            try:
+                                if not sent:
+                                            
+                        
+                                    click_btn = WebDriverWait(self.driver,self.delay).until(EC.element_to_be_clickable((By.XPATH, "//button[@data-testid='compose-btn-send']")))
+                                    sleep(0.3)
+                                    click_btn.click()
+                                    sleep(1.2)
+                                    sent = True
+                                
+                                    self.debug_print(f"Message sent to {number}!")
+
+                                    self.style.reset()
+                                    
+                            except Exception as e:
+                                self.debug_print("Fail")
+                                self.debug_print(e)
+                                self.debug_print(f"Failed to send message to {number}")
                                 self.style.reset()
-                                
-                        except Exception as e:
-                            
-                            self.debug_print(e)
-                            self.debug_print(f"Failed to send message to {number}")
-                            self.style.reset()
-                            return 0
+                                       
 
                     
                 except Exception as e:
-                    self.style.set_red()
-                    self.debug_print("Error with WebDriver")
+                    
+                    self.debug_print(e)
                     self.style.reset()
-                    return 0
-                return 1
+                    
+                return sent
+    
+
+    def send_file_message(self,message:str ,number:str, filepath:str, wrong_number_list:list):
+            print("Sending module")
+            sent = False
+            number = number.strip()
+            if number != "":
+                try:
+
+
+                    att_box = self.driver.find_element_by_xpath('//div')
+
+                    url = f"https://web.whatsapp.com/send?phone={number}&text={quote(message)}"
+                    self.driver.get(url)
+                    
+                    error = False
+                    try:
+                        btn_error_ok = WebDriverWait(self.driver,6).until(EC.element_to_be_clickable((By.XPATH,"//button[@data-testid='popup-controls-ok']")))
+                        sleep(0.3)
+                        btn_error_ok.click()
+                        
+                        error = True
+                        wrong_number_list.append(number)
+                    except Exception as e:
+                        pass
+
+                    
+
+            
+                    if not error:
+
+                        for i in range(3):
+                            try:
+                                if not sent:
+                                            
+                        
+                                    attachment_box = self.driver.find_element_by_xpath('//span[@data-testid = "clip"]')
+                                    attachment_box.click()
+                            
+                                    file_box = self.driver.find_element_by_xpath("//input[@accept='*']")
+
+                                    file_box.send_keys(filepath)
+
+                                    """
+                                    click_btn = WebDriverWait(self.driver,self.delay).until(EC.element_to_be_clickable((By.XPATH, "//button[@data-testid='send']")))
+                                    sleep(0.3)
+                                    click_btn.click()
+                                    """
+                                    click_btn = self.driver.find_element_by_xpath("//span[@data-testid='send']")
+                                    click_btn.click()
+
+                                    sent = True
+                                    
+                                    
+                  
+                                    self.debug_print(f"Message sent to {number}!")
+
+                                    self.style.reset()
+                                    
+                            except Exception as e:
+                                self.debug_print("Fail")
+                                self.debug_print(e)
+                                self.debug_print(f"Failed to send message to {number}")
+                                self.style.reset()
+                                       
+
+                    
+                except Exception as e:
+                    
+                    self.debug_print(e)
+                    self.style.reset()
+                    
+                return sent
+    
+
 
 
     def debug_print(self,message:str):
@@ -87,3 +175,6 @@ class Sender():
             return True
         except WebDriverException:
             return False
+
+    def quit(self):
+        self.driver.quit()

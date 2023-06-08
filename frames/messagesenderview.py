@@ -1,6 +1,6 @@
 import os
 from tkinter import (END, Button, Entry, Frame, Label, Listbox, PhotoImage,
-                     Text, messagebox, ttk)
+                     Text, messagebox, ttk, INSERT,filedialog)
 from utils.formatter import Formatter
 
 class MessageSenderView(ttk.Frame):
@@ -88,9 +88,14 @@ class MessageSenderView(ttk.Frame):
 
         self.example_text = Text(self,highlightthickness=0,state="disabled",relief="groove",font=('arial',10))
         self.example_text.place(x=0,y=0,height=0,width=0)
-        
+       
+        self.add_file_button = ttk.Button(self, text="Añadir Archivo", command=self.add_file)
+        self.add_file_button.place(x = 780,y = 470, height=40, width=160)
 
+        self.clear_file_button = ttk.Button(self, text="Quitar Archivo",command=self.clear_file)
+        self.clear_file_button.place(x = 780, y = 520, height=40, width=160)
 
+        self.filepath = ""
 
         
         
@@ -124,42 +129,42 @@ class MessageSenderView(ttk.Frame):
         self.controller.back()
 
     def insert_column(self):
-
-        if self.del_switch == False:
-            self.del_switch  = True
-
-
     
         index = self.listbox.curselection()
 
 
         if len(index)>0:
+            if self.del_switch == False:
+                self.del_switch  = True
+
 
             if self.listbox.get(index) != "No hay datos":
-                
+              
+                cursor_index = self.message_box.index(INSERT)  
+
                 if self.message_box.get("1.0","end-1c") != self.default_message:
-                    cur_text = self.message_box.get("1.0","end-1c")
-                    """
-                    if len(lst)>0:
-                        cur_text = ""
-                        for i in range(len(lst)-1):
-                            cur_text += lst[i]+"\n"
-                    else:
-                        cur_text = lst[0]
-                    """
-                    if cur_text[len(cur_text)-1:len(cur_text)] == " ":
-                         self.message = cur_text + "{"+self.listbox.get(index)+"}"
+                    
 
+                    if cursor_index.split(".")[1] != "0":
+                        prev_char = self.message_box.get(f"{round(float(cursor_index)-0.1,1)}",cursor_index)
+                        if prev_char!= " ":
+                            self.message_box.insert(cursor_index," ")
+                            cursor_index = self.message_box.index(INSERT)
+
+
+                    next_char = self.message_box.get(cursor_index,f"{round(float(cursor_index)+0.1,1)}")
+                    if next_char != "" or next_char != " ":
+                         self.message_box.insert(cursor_index,f"{{{self.listbox.get(index)}}} ") 
                     else:
-                        self.message = cur_text + " {"+self.listbox.get(index)+"}"
+                        self.message_box.insert(cursor_index,f"{{{self.listbox.get(index)}}}")    
+
+                    self.message = self.message_box.get("1.0","end-1c")
                 else:
+                    self.message_box.delete("1.0","end-1c")
+                    self.message_box.insert(cursor_index,f"{{{self.listbox.get(index)}}}")
 
-
-                    self.message = "{"+self.listbox.get(index)+"}"
-
-                self.message_box.delete("1.0",END)
-                self.message_box.insert("1.0",self.message)
-                      
+                  
+    
     def capture_message(self):
         if self.message_box.get("1.0","end-1c") != self.default_message:
             self.message = self.message_box.get("1.0","end-1c")
@@ -167,8 +172,11 @@ class MessageSenderView(ttk.Frame):
         else:
             self.message = ""
             self.default_message = ""
+
         messagebox.showinfo(message="Mensaje actualizado con exito")
         self.controller.update_message()
+        self.controller.filepath  = self.filepath
+        print(self.filepath,self.controller.filepath)
         if self.message == "":
             self.del_switch = False
             self.switch_delete()
@@ -189,7 +197,7 @@ class MessageSenderView(ttk.Frame):
 
     def up_example(self):
         self.title_example_label.place(x=20,y=480,height=30,width=70)
-        self.example_text.place(x=20,y=510,height=50,width=800)
+        self.example_text.place(x=20,y=510,height=40,width=600)
     def drop_example(self):
         self.title_example_label.place(x=0,y=0,height=0,width=0)
         self.example_text.place(x=0,y=0,height=0,width=0)
@@ -215,4 +223,24 @@ class MessageSenderView(ttk.Frame):
         if self.del_switch == False and self.message != "":
             self.message_box.delete("1.0","end-1c")
             self.message_box.insert("1.0",self.message)
+    
+    def add_file(self):
+        
+        try:
+            self.filepath = filedialog.askopenfilename(initialdir = os.getcwd(),
+                                                    title = "Seleccione un Archivo",
+                                                filetypes = (("Todos","*.*"),))
+            
+            print(self.filepath)
+            messagebox.showinfo(title="Aviso", message="Archivo seleccionado con exito")
 
+            
+        except Exception as e:
+            messagebox.showerror(title="Error", message="Error abriendo el archivo")
+            print(e)
+
+
+    def clear_file(self):
+        self.filepath = ""
+
+        messagebox.showinfo(title="Aviso",message="Mensaje eliminado")

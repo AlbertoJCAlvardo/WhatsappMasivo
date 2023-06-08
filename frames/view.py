@@ -12,6 +12,8 @@ class View(Frame):
         self.data = None
         self.message = f""
         self.filename = f""
+        self.filepath = f""
+
         self.candidate = None
         self.pack(side='top', fill="both",expand=True)
  

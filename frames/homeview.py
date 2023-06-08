@@ -70,7 +70,10 @@ class HomeView(ttk.Frame):
 
 
     def send_messages(self):
-        
+       
+        print(self.controller.message, self.controller.filepath)
+
+
         if not isinstance(self.controller.data,pd.DataFrame) or self.controller.message == "":
             messagebox.showerror(message="Aun no selecciona un archivo con datos o mensaje")
             
@@ -98,10 +101,14 @@ class HomeView(ttk.Frame):
             c_dict = {}
             rechazados = []
             rejected_rows = []
+            wrong_numbers = []
+
+
+
             for i in numbers:
                 if i not in c_dict.keys():
                     c_dict[i] = 0
-
+            
             for i in range(len(numbers)):
                  
 
@@ -111,14 +118,29 @@ class HomeView(ttk.Frame):
                 c_dict[numbers[i]]+=1
                 progress = (i+1)//len(numbers)*100
                 message = self.formatter.format_string(self.controller.message,row)
-    
-                if self.sender.send_message(message, formatted_numbers[i]):
-                    count += 1
+                
+                if self.controller.filepath == "":
+                    
+                    if self.sender.send_message(message, formatted_numbers[i],wrong_numbers):
+                        count += 1
+                    else:
+                        if formatted_numbers[i] not in wrong_numbers:
+                            rechazados.append(numbers[i])
+                            rejected_rows.append(row)
+                
                 else:
-                    rechazados.append(numbers[i])
-                    rejected_rows.append(row)
+                    print("Sending file...")
+                    if self.sender.send_file_message(message, formatted_numbers[i],self.controller.filepath,wrong_numbers):
+                        count += 1
+                    else:
+                        if formatted_numbers[i] not in wrong_numbers:
+                            rechazados.append(numbers[i])
+                            rejected_rows.append(row)
+                            
 
-            messagebox.showinfo(title="Envio Finalizado",message=f"Enviados: {count}\nError: {len(numbers)-count}")
+
+
+            messagebox.showinfo(title="Envio Finalizado",message=f"Enviados: {count}\nError: {len(rechazados)}")
             
 
             while count<len(numbers) and  messagebox.askyesno(message=f"Desea reintentar enviar los {len(rechazados)} mensajes?"):
@@ -128,9 +150,27 @@ class HomeView(ttk.Frame):
                         continue 
                 i = 0   
                 while i < len(rechazados):
+                    
+                    sent = False
                     message = self.formatter.format_string(self.controller.message,rejected_rows[i]) 
-                    if self.sender.send_message(message,rechazados[i]):
-                        i-=1
+                    
+                        
+                    if self.controller.filepath == "":
+                        
+                        if self.sender.send_message(message, formatted_numbers[i],wrong_numbers):
+                            count += 1
+                            sent  = True
+                        
+                            
+                    
+                    else: 
+                        if self.sender.send_file_message(message, formatted_numbers[i],self.controller.filepath,wrong_numbers):
+                            count += 1
+                            sent = True
+                                
+
+                    if sent == True :
+                        i-= 1
                         count += 1
                         if i<len(rechazados):
                             if i>0:
@@ -143,7 +183,9 @@ class HomeView(ttk.Frame):
                         else:
                             rechazados = rechazados[0:i]
                             rejected_rows = rejected_rows[0:i]
-                    i+=1    
+                    
+                    i+=1
+
 
 
     

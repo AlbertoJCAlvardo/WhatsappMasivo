@@ -3,6 +3,7 @@ from tkinter import (END, Button, Entry, Frame, Label, Listbox, PhotoImage,
                      Text, messagebox, ttk, INSERT,filedialog)
 from utils.formatter import Formatter
 
+
 class MessageSenderView(ttk.Frame):
     def __init__(self,parent,controller):
         ttk.Frame.__init__(self,parent)
@@ -62,8 +63,6 @@ class MessageSenderView(ttk.Frame):
 
         self.bind("<Button-1>",lambda event:self.set_default_message())
 
-        direct = os.path.join(os.getcwd(),"Icons/arrow_icon.png")
-        #photo = PhotoImage(file = direct)
 
         self.next_button = ttk.Button(self,text="Capturar mensaje",command=self.capture_message )
 
@@ -83,10 +82,10 @@ class MessageSenderView(ttk.Frame):
         self.try_button.place(x=510, y=390, height=40,width=140)
         
         self.example =  ""
-        self.title_example_label = ttk.Label(self,text="Ejemplo:",font=(8))
+        self.title_example_label = ttk.Label(self,text="Ejemplo:",font=("arial",8))
         self.title_example_label.place(x=0,y=0,height=0,width=0)
 
-        self.example_text = Text(self,highlightthickness=0,state="disabled",relief="groove",font=('arial',10))
+        self.example_text = Text(self,highlightthickness=0,relief="groove",font=('arial',10))
         self.example_text.place(x=0,y=0,height=0,width=0)
        
         self.add_file_button = ttk.Button(self, text="Añadir Archivo", command=self.add_file)
@@ -97,7 +96,12 @@ class MessageSenderView(ttk.Frame):
 
         self.filepath = ""
 
-        
+         
+        self.filepath_text = ttk.Entry(self,text="",state="readonly",font=("arial",10))
+        self.filepath_text.place(x=0,y=0,height=0,width=0)
+
+
+        self.title_filepath_label = ttk.Label(self,text="Archivo: ",font=("Arial",8))
         
     def update_list(self): 
         self.columns = []
@@ -184,6 +188,8 @@ class MessageSenderView(ttk.Frame):
 
         self.controller.back()
         self.drop_example()
+
+
     def show_example(self):
         cur_text = self.message_box.get("1.0","end-1c")
         self.example = ""
@@ -193,19 +199,30 @@ class MessageSenderView(ttk.Frame):
         self.example_text.configure(state="normal")
         self.example_text.delete("1.0","end-1c")
         self.example_text.insert("1.0",self.example)
-        self.example_text.configure(state="disabled")
+        
+    
+    def up_filepath(self):
+        self.title_filepath_label.place(x=320,y=490,height=20,width=70)
+        self.filepath_text.place(x=320,y=510,height=40,width=280)
+    
+    
+    def drop_filepath(self):
+        self.title_filepath_label.place(x=0,y=0,height=0,width=0)
+        self.filepath_text.place(x=0,y=0,height=0,width=0)
+        self.example = ""
+        self.filepath_text.delete("1.0","end-1c")
+
 
     def up_example(self):
-        self.title_example_label.place(x=20,y=480,height=30,width=70)
-        self.example_text.place(x=20,y=510,height=40,width=600)
+        self.title_example_label.place(x=20,y=490,height=20,width=70)
+        self.example_text.place(x=20,y=510,height=40,width=280)
+    
     def drop_example(self):
         self.title_example_label.place(x=0,y=0,height=0,width=0)
         self.example_text.place(x=0,y=0,height=0,width=0)
         self.example = ""
         self.example_text.delete("1.0","end-1c")
 
-
-    
     def clear_box(self):
         self.message_box.delete("1.0",END)
         self.message_box.insert("1.0",self.default_message)
@@ -224,6 +241,8 @@ class MessageSenderView(ttk.Frame):
             self.message_box.delete("1.0","end-1c")
             self.message_box.insert("1.0",self.message)
     
+
+
     def add_file(self):
         
         try:
@@ -233,7 +252,12 @@ class MessageSenderView(ttk.Frame):
             
             print(self.filepath)
             messagebox.showinfo(title="Aviso", message="Archivo seleccionado con exito")
-
+            
+            self.up_filepath()
+            self.filepath_text.configure(state="normal")
+            self.filepath_text.delete(0,END)
+            self.filepath_text.insert(0,self.filepath)
+            
             
         except Exception as e:
             messagebox.showerror(title="Error", message="Error abriendo el archivo")
@@ -242,5 +266,7 @@ class MessageSenderView(ttk.Frame):
 
     def clear_file(self):
         self.filepath = ""
-
+        self.filepath_text.configure(state="enable")
+        self.filepath_text.delete(0,END)
+        self.drop_filepath()
         messagebox.showinfo(title="Aviso",message="Mensaje eliminado")

@@ -1,5 +1,6 @@
 import pandas as pd 
 class Formatter:
+
     def format_string(self,text:str,data:pd.Series):
 
         words, tokens = [],[]
@@ -28,8 +29,6 @@ class Formatter:
             else:
                 formatted += i
         
-        
-
 
         return formatted
 
@@ -57,5 +56,4 @@ class Formatter:
 
 
         
-
 

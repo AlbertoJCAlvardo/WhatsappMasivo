@@ -150,14 +150,18 @@ class MessageSenderView(ttk.Frame):
                     
 
                     if cursor_index.split(".")[1] != "0":
+
                         prev_char = self.message_box.get(f"{round(float(cursor_index)-0.1,1)}",cursor_index)
-                        if prev_char!= " ":
+                        
+
+                        if prev_char != "":
                             self.message_box.insert(cursor_index," ")
                             cursor_index = self.message_box.index(INSERT)
 
 
                     next_char = self.message_box.get(cursor_index,f"{round(float(cursor_index)+0.1,1)}")
-                    if next_char != "" or next_char != " ":
+
+                    if next_char != "" and next_char != " ":
                          self.message_box.insert(cursor_index,f"{{{self.listbox.get(index)}}} ") 
                     else:
                         self.message_box.insert(cursor_index,f"{{{self.listbox.get(index)}}}")    
@@ -178,7 +182,7 @@ class MessageSenderView(ttk.Frame):
             self.default_message = ""
 
         messagebox.showinfo(message="Mensaje actualizado con exito")
-        self.controller.update_message()
+        self.controller.update_message()        
         self.controller.filepath  = self.filepath
         print(self.filepath,self.controller.filepath)
         if self.message == "":
@@ -250,14 +254,15 @@ class MessageSenderView(ttk.Frame):
                                                     title = "Seleccione un Archivo",
                                                 filetypes = (("Todos","*.*"),))
             
-            print(self.filepath)
-            messagebox.showinfo(title="Aviso", message="Archivo seleccionado con exito")
-            
-            self.up_filepath()
-            self.filepath_text.configure(state="normal")
-            self.filepath_text.delete(0,END)
-            self.filepath_text.insert(0,self.filepath)
-            
+            if self.filepath is not None and self.filepath != "":
+                print(self.filepath)
+                messagebox.showinfo(title="Aviso", message="Archivo seleccionado con exito")
+                
+                self.up_filepath()
+                self.filepath_text.configure(state="normal")
+                self.filepath_text.delete(0,END)
+                self.filepath_text.insert(0,self.filepath)
+                
             
         except Exception as e:
             messagebox.showerror(title="Error", message="Error abriendo el archivo")

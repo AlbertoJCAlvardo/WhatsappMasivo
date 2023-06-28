@@ -6,6 +6,7 @@ from tkinter import Frame,Tk,ttk
  
 class View(Frame):
     def __init__(self):
+        
         self.root = Root()
         ttk.Frame.__init__(self,self.root)
         
@@ -13,6 +14,7 @@ class View(Frame):
         self.message = f""
         self.filename = f""
         self.filepath = f""
+        self.data_path = ""
 
         self.candidate = None
         self.pack(side='top', fill="both",expand=True)
@@ -43,6 +45,10 @@ class View(Frame):
     def back(self):
         self.show_frame(HomeView)
     
+    def clear_message(self):
+        self.frames[HomeView].clear_message()
+        self.message  = None
+        self.frames[MessageSenderView].clear_box()
     def update_message(self):
         self.frames[HomeView].update_message()
     def update_list(self):

@@ -5,6 +5,8 @@ from utils.sender import Sender
 from utils.formatter import Formatter
 import pandas as pd
 from time import sleep
+from datetime import datetime
+
 
 
 class HomeView(ttk.Frame):
@@ -71,13 +73,18 @@ class HomeView(ttk.Frame):
 
     def send_messages(self):
        
-        print(self.controller.message, self.controller.filepath)
-
 
         if not isinstance(self.controller.data,pd.DataFrame) or self.controller.message == "":
             messagebox.showerror(message="Aun no selecciona un archivo con datos o mensaje")
             
         else:
+
+            path = f""
+            parts = self.controller.filename.split("/")
+            for i in range(len(parts)-1):
+                    path += f"{parts[i]}/"
+                    
+                
             
             numbers, formatted_numbers = self.formatter.format_phone_numbers(list(self.controller.data["NUMERO_TELEFONO"]))
             
@@ -89,103 +96,179 @@ class HomeView(ttk.Frame):
 
             self.sender.connect_with_whatsapp()    
             opt = False
-            while opt == False:
-                messagebox.askokcancel(message="Pulse continuar cuando sus chats son visibles en el navegador")
-                opt = messagebox.askyesno(message="Está seguro(a) que sus chats son visibles en el navegador?")
-
-            count = 0
-            progress = 0
-
+            
+            messagebox.askokcancel(message="Pulse continuar cuando sus chats son visibles en el navegador")
+            opt = messagebox.askyesno(message="Está seguro(a) que sus chats son visibles en el navegador?")
+            
             auxdata = self.controller.data.copy()
-            #self.up_progress()
-            c_dict = {}
-            rechazados = []
-            rejected_rows = []
-            wrong_numbers = []
-
-
-
-            for i in numbers:
-                if i not in c_dict.keys():
-                    c_dict[i] = 0
             
-            for i in range(len(numbers)):
-                 
-
-                row  = auxdata[self.controller.data["NUMERO_TELEFONO"] == numbers[i]]
-                row = row.iloc[c_dict[numbers[i]]] 
-               
-                c_dict[numbers[i]]+=1
-                progress = (i+1)//len(numbers)*100
-                message = self.formatter.format_string(self.controller.message,row)
                 
-                if self.controller.filepath == "":
-                    
-                    if self.sender.send_message(message, formatted_numbers[i],wrong_numbers):
-                        count += 1
-                    else:
-                        if formatted_numbers[i] not in wrong_numbers:
-                            rechazados.append(numbers[i])
-                            rejected_rows.append(row)
+            if "TIPO_ERROR" in auxdata.columns:
+                auxdata = auxdata[auxdata["TIPO_ERROR"] == "Error del navegador"]
                 
-                else:
-                    print("Sending file...")
-                    if self.sender.send_file_message(message, formatted_numbers[i],self.controller.filepath,wrong_numbers):
-                        count += 1
-                    else:
-                        if formatted_numbers[i] not in wrong_numbers:
-                            rechazados.append(numbers[i])
-                            rejected_rows.append(row)
-                            
-
-
-
-            messagebox.showinfo(title="Envio Finalizado",message=f"Enviados: {count}\nError: {len(rechazados)}")
             
 
-            while count<len(numbers) and  messagebox.askyesno(message=f"Desea reintentar enviar los {len(rechazados)} mensajes?"):
-                if not self.sender.check_driver_alive():
-                    self.sender.connect_with_whatsapp()
-                    while not messagebox.askyesno(message="Está seguro(a) que sus chats son visibles en el navegador?"):
-                        continue 
-                i = 0   
-                while i < len(rechazados):
+
+
+            if opt and not auxdata.empty:
+
+                count = 0
+                progress = 0
+
+                c_dict = {}
+                rechazados = []
+                rejected_rows = []
+                wrong_numbers = []
+
+
+
+                for i in numbers:
+                    if i not in c_dict.keys():
+                        c_dict[i] = 0
+                
+
+                for i in range(len(numbers)):
                     
-                    sent = False
-                    message = self.formatter.format_string(self.controller.message,rejected_rows[i]) 
+                    print(wrong_numbers,rechazados)
+
+                    row  = auxdata[self.controller.data["NUMERO_TELEFONO"] == numbers[i]]
+                    row = row.iloc[[c_dict[numbers[i]]]] 
+                   
+                    c_dict[numbers[i]]+=1
+
+                    progress = (i+1)//len(numbers)*100
                     
-                        
+                    message = self.formatter.format_string(self.controller.message,row.iloc[0])
+                    
                     if self.controller.filepath == "":
-                        
+            
                         if self.sender.send_message(message, formatted_numbers[i],wrong_numbers):
                             count += 1
-                            sent  = True
                         
+                        else:
+                            
+                            if formatted_numbers[i] not in wrong_numbers:
+                            
+                                row["TIPO_ERROR"] = "Error del navegador"
+                            
+                            else:
+                                
+                                row["TIPO_ERROR"] = "Num no Existe en Whatsapp"
+                            
+                            rechazados.append(numbers[i])
+                            rejected_rows.append(row)
+                            
                             
                     
-                    else: 
+                    
+                    else:
+                        print("Sending file...")
                         if self.sender.send_file_message(message, formatted_numbers[i],self.controller.filepath,wrong_numbers):
                             count += 1
-                            sent = True
+                        else:
+
+                            if formatted_numbers[i] not in wrong_numbers:
+                                row["TIPO_ERROR"] = "Error del navegador"
+                            else:
+                                row["TIPO_ERROR"] = "Num no Existe en Whatsapp"
+                            
+                            rechazados.append(numbers[i])
+                            rejected_rows.append(row)
+                            
+
+
+
+
+
+                messagebox.showinfo(title="Envio Finalizado",message=f"Enviados: {count}\nError: {len(rechazados)}")
+                
+                   
+                                                                                                                       #*****_*****_*****_*****_*****_*****
+                if messagebox.askyesno(message="Desea exportar un archivo con los numeros faltantes?"):
+                            
+                            df = rejected_rows[0].copy()
+
+                            for i in range(1,len(rechazados)):
+                                
+                                df = pd.concat([df,rejected_rows[i]])
                                 
 
-                    if sent == True :
-                        i-= 1
-                        count += 1
-                        if i<len(rechazados):
-                            if i>0:
-                                rechazados = rechazados[0:i] + rechazados[i+1:len(rechazados)]
-                                rejected_rows = rejected_rows[0:i] + rejected_rows[i+1:len(rejected_rows)]
+                            rejected_file_path = f"{path}Usuarios_rechazados_{datetime.now()}.csv"
+                            df.to_csv(rejected_file_path,index=None)
+                            messagebox.showinfo(title="Archivo generado",message=f"Archivo exportado en {rejected_file_path}")
 
-                            else:
-                                rechazados = rechazados[1:len(rechazados)]
-                                rejected_rows = rejected_rows[1:len(rejected_rows)]
-                        else:
-                            rechazados = rechazados[0:i]
-                            rejected_rows = rejected_rows[0:i]
-                    
-                    i+=1
 
+
+                if len(rechazados)>0 and len(rechazados) > len(wrong_numbers):
+
+                    retry =  messagebox.askyesno(message=f"Desea reintentar enviar los {len(rechazados)} mensajes?")
+                     
+                    while count<len(numbers) and retry:
+
+                        if not self.sender.check_driver_alive():
+                            self.sender.connect_with_whatsapp()
+                            while not messagebox.askyesno(message="Está seguro(a) que sus chats son visibles en el navegador?"):
+                                continue 
+                        i = 0   
+                        while i < len(rechazados):
+                            
+                            sent = False
+                            message = self.formatter.format_string(self.controller.message,rejected_rows[i].iloc[0]) 
+                            
+                                 
+                            if self.controller.filepath == "":
+                                if formatted_numbers[i] not in wrong_numbers:
+                                    if self.sender.send_message(message, formatted_numbers[i],wrong_numbers):
+                                        count += 1
+                                        sent  = True
+                                
+                                    
+                            
+                            else: 
+
+                                if self.sender.send_file_message(message, formatted_numbers[i],self.controller.filepath,wrong_numbers):
+                                    count += 1
+                                    sent = True
+                                        
+
+                            if sent == True :
+                                i-= 1
+                                count += 1
+                                if i<len(rechazados):
+                                    if i>0:
+
+                                        rechazados = rechazados[0:i] + rechazados[i+1:len(rechazados)]
+                                        rejected_rows = rejected_rows[0:i] + rejected_rows[i+1:len(rejected_rows)]
+
+
+                                    else:
+                                        rechazados = rechazados[1:len(rechazados)]
+                                        rejected_rows = rejected_rows[1:len(rejected_rows)]
+                                else:
+                                    rechazados = rechazados[0:i]
+                                    rejected_rows = rejected_rows[0:i]
+                            
+                            i+=1
+                      
+                        retry =  messagebox.askyesno(message=f"Desea reintentar enviar los {len(rechazados)} mensajes?")
+                        if not retry:                                                                                               #*****_*****_*****_*****_*****_*****
+                            if messagebox.askyesno(message="Desea exportar un archivo con los campos faltantes?"):
+                            
+                                df = rejected_rows[0].copy()
+
+                                for i in range(1,len(rechazados)):
+                                    
+                                    df = pd.concat([df,rejected_rows[i]])
+                                    
+
+                                rejected_file_path = f"{path}Usuarios_rechazados_{datetime.now()}.csv"
+                                df.to_csv(rejected_file_path,index=None)
+                                messagebox.showinfo(title="Archivo generado",message=f"Archivo exportado en {rejected_file_path}")
+
+            else:
+                messagebox.showinfo(message="Sin numeros validos que mostrar")
+
+            self.sender.quit()
 
 
     
@@ -206,4 +289,5 @@ class HomeView(ttk.Frame):
         self.message_entry.delete(0,END)
         self.message_entry.insert(0,self.controller.message)
         self.message_entry.config(state="readonly")
-    
+    def clear_message(self):
+        self.message_entry.delete(0,END)

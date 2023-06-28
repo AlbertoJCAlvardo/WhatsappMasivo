@@ -2,7 +2,9 @@ from tkinter import Frame,Label,Entry,Button,PhotoImage,messagebox,filedialog,Te
 import os
 import pandas as pd
 
+
 class DataObtentionView(ttk.Frame):
+    
     def __init__(self,parent,controller):
         ttk.Frame.__init__(self,parent)
         self.controller  = controller
@@ -19,12 +21,9 @@ class DataObtentionView(ttk.Frame):
         self.search_button = ttk.Button(self,text="Buscar",command=self.open_file)
         self.search_button.place(x=770,y=170,height=60,width=160)
         
+        
         direct = os.path.join(os.getcwd(),"Icons/arrow_icon.png")
          
-        
-        #self.table_text = Text(self,height=20,width=70,padx=5,pady=5,font=(None,8))
-        #self.table_text.grid(row=1,column=0)
-        
 
         self.table = ttk.Treeview(self,show="headings",height="100",columns=(1,2,3,4))
         for i in range(4):
@@ -52,17 +51,22 @@ class DataObtentionView(ttk.Frame):
 
     def open_file(self):
         try:
+            if self.controller.data is not None:
+
+                self.controller.clear_message()
+                self.table.delete()
+
             filename = filedialog.askopenfilename(initialdir = os.getcwd(),
                                                     title = "Seleccione un Archivo",
-                                                filetypes = (("Archivos Excel",
-                                                                "*.xlsx"),
-                                                                ("CSV","*.csv")))
+                                                filetypes = (('Todos','*.*'),
+                                                             ("Archivos Excel","*.xlsx"),
+                                                                ("Archivos CSV","*.csv")))
                  
             correct = False
             
             
-
-            if filename.split(".")[1] == "xlsx":
+            print(filename)
+            if filename.split(".")[len(filename.split('.')) - 1] == "xlsx":
                     
                 data = pd.read_excel(filename)
                 if "NUMERO_TELEFONO" in data.columns:
@@ -81,21 +85,33 @@ class DataObtentionView(ttk.Frame):
                 
 
 
-            if filename.split(".")[1] == "csv":
+            if filename.split(".")[len(filename.split('.')) - 1] == "csv":
+                
                 data = pd.read_csv(filename)
 
                 if "NUMERO_TELEFONO"in data.columns:
                     self.data = data
                     correct  = True
-                    messagebox.showmessage(message="Archivo Seleccionado")
-
+                    messagebox.showinfo(message="Archivo Seleccionado")
+                    fnl = filename.split("/")
+                    lst = []
+                    for i in list(data["NUMERO_TELEFONO"]):
+                        lst.append(str(i))
+                    data["NUMERO_TELEFONO"] = lst
+                   
                 else:
-                    messagebox.showerror(message="Error de Formato, el archivo debe contener la columna NUMERO_TELEFONO")
-            
-            if correct:
 
-                #self.table_text.delete("1.0",END)
-                #self.table_text.insert("1.0",str(self.data)) 
+                    messagebox.showerror(message="Error de Formato, el archivo debe contener la columna NUMERO_TELEFONO")
+                    
+
+
+            if correct:
+                print(self.data)
+                self.controller.clear_message()
+                for i in self.table.get_children():
+                    self.table.delete(i)
+
+
                 columns = list(data.columns)
 
                 l = []

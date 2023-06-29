@@ -83,6 +83,9 @@ class HomeView(ttk.Frame):
             parts = self.controller.filename.split("/")
             for i in range(len(parts)-1):
                     path += f"{parts[i]}/"
+
+            print("Path: ",path)
+            print("FPath: ",self.controller.filename)
                     
                 
             
@@ -191,10 +194,12 @@ class HomeView(ttk.Frame):
                             for i in range(1,len(rechazados)):
                                 
                                 df = pd.concat([df,rejected_rows[i]])
-                                
-
-                            rejected_file_path = f"{path}Usuarios_rechazados_{datetime.now()}.csv"
-                            df.to_csv(rejected_file_path,index=None)
+                            
+                            fhora = ""+datetime.now().strftime("%m-%d-%Y-%H%M%S")
+                            fhora = fhora.strip()
+			    
+                            rejected_file_path = f"{path}Usuarios_rechazados_{fhora}.csv"
+                            df.to_csv(path_or_buf=rejected_file_path,index=None)
                             messagebox.showinfo(title="Archivo generado",message=f"Archivo exportado en {rejected_file_path}")
 
 

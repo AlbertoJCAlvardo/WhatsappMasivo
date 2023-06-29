@@ -135,7 +135,7 @@ class DataObtentionView(ttk.Frame):
                 
                 self.controller.data = self.data
                 self.controller.update_list()
-                self.controller.filename = fnl[len(fnl) - 1]
+                self.controller.filename = filename
                 
                     
         except Exception as e:

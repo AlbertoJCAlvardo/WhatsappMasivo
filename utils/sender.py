@@ -26,11 +26,11 @@ class Sender():
         self.options.add_argument("start-maximized")
         self.style = Style()       
         self.delay = 10
-
+        self.driver = None
 
     def connect_with_whatsapp(self):
         try:
-            self.driver = webdriver.Chrome(ChromeDriverManager().install(),options=self.options)
+            self.driver = webdriver.Chrome(ChromeDriverManager(version="114.0.5735.90").install(),options=self.options)    
             self.driver.get("https://web.whatsapp.com")
         except Exception as e:
             self.style.set_red()
@@ -171,8 +171,10 @@ class Sender():
 
     def check_driver_alive(self):
         try:
-            self.driver.title
-            return True
+            if self.driver is not None:
+                self.driver.title
+                return True
+            return False
         except WebDriverException:
             return False
 

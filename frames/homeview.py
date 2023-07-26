@@ -6,12 +6,14 @@ from utils.formatter import Formatter
 import pandas as pd
 from time import sleep
 from datetime import datetime
-
+from threading import Thread
 
 
 class HomeView(ttk.Frame):
     def __init__(self,parent,controller):
         ttk.Frame.__init__(self,parent)
+
+        self.sending_flag = 0
 
         self.controller = controller
         self.header = ttk.Label(self,text="Envio masivo de mensajes",font=("bold",25))
@@ -24,7 +26,7 @@ class HomeView(ttk.Frame):
         self.message_button.place(x=750,y=270,height=60,width=160)
         
 
-        self.send_button = ttk.Button(self, text="Enviar",command = self.send_messages)
+        self.send_button = ttk.Button(self, text="Enviar",command = self.start_message_sending)
         self.send_button.place(x=750,y=390,height=60,width=160)  
         
 
@@ -41,9 +43,10 @@ class HomeView(ttk.Frame):
         self.file_entry.place(x=40, y=150,height=30,width=350)
         
     
-        self.progress_bar = ttk.Progressbar(self,length=350)
-        self.progress_label = ttk.Label(self,font=('arial',8))
-        self.cancel_button = ttk.Button(self,text="Cancelar",command=self.cancel)
+        self.progress_bar = ttk.Progressbar(self,length=450)
+        self.progress_label = ttk.Label(self,font=('arial',10))
+
+        self.cancel_button = ttk.Button(self,text="Cancelar",command=self.stop_message_sending)
 
         self.progress_bar.place(x=0,y=0,height=0,width=0)
         self.progress_label.place(x=0,y=0,height=0,width=0)
@@ -53,23 +56,182 @@ class HomeView(ttk.Frame):
 
         self.sender = Sender(debug=True)
         self.formatter = Formatter()
-
+        self.progress_label_text = ""
 
     def up_progress(self):
-            self.progress_bar.place(x=100,y=370,height=40,width=350)
-            self.progress_label.place(x=100,y=420,height=50,width=200)
+                       
+            self.message_button.config(state="disabled")
+            self.send_button.config(state="disabled")
+            self.data_obtention_button.config(state="disabled")
+            self.progress_bar.place(x=40,y=370,height=30,width=450)
+            self.progress_label.place(x=230,y=400,height=50,width=200)
+            
             self.progress_bar['value'] = 0
         
-            self.cancel_button.place(x=200,y=450,height=50,width=150)
+            self.cancel_button.place(x=190,y=500,height=50,width=150)
 
 
     def drop_progress(self):
+            
+            self.message_button.config(state="normal")
+            self.send_button.config(state="normal")
+            self.data_obtention_button.configure(state="normal")
 
             self.progress_bar.place(x=0,y=0,height=0,width=0)
             self.progress_label.place(x=0,y=0,height=0,width=0)
-            self.progress_label.configure(text="")
+           
+            
             self.cancel_button.place(x=0,y=0,height=0,width=0)
 
+    def start_message_sending(self):
+            self.up_progress()
+            
+            t = Thread(target=self.send_r)
+            tl = Thread(target=self.spark)
+            if self.sending_flag == 0:
+
+                self.sending_flag = 1
+                t.start()
+                tl.start()
+
+    def spark(self):
+         text = self.progress_label.cget('text')
+         while self.sending_flag == 1:
+            self.progress_label.configure(text=self.progress_label_text)
+            sleep(2)
+            self.progress_label.configure(text="")
+            sleep(0.5)
+
+    def stop_message_sending(self):
+         self.sending_flag = 0
+         messagebox.showinfo(message='Envio cancelado')
+         
+    def send_r(self,data=None):
+        
+
+        if not isinstance(self.controller.data,pd.DataFrame) or self.controller.message == "":
+            messagebox.showerror(message="Aun no selecciona un archivo con datos o mensaje")
+            
+        else:
+
+            path = f""
+            parts = self.controller.filename.split("/")
+            for i in range(len(parts)-1):
+                    path += f"{parts[i]}/"
+                    
+            if data is None:
+                data = self.controller.data    
+            print(data)
+
+            numbers, formatted_numbers = self.formatter.format_phone_numbers(list(data["NUMERO_TELEFONO"]))
+            
+            
+            dif = len(list(data["NUMERO_TELEFONO"])) - len(numbers)
+            
+            if dif>0:
+                messagebox.showinfo(message=f"Numeros de telefono invalidos: {dif}")
+
+            opt = False
+            if not self.sender.check_driver_alive():
+                            self.sender.connect_with_whatsapp()
+                            
+                            messagebox.showinfo(message="Pulse continuar cuando sus chats son visibles en el navegador")
+                            opt =  messagebox.askyesno(message="Está seguro(a) que sus chats son visibles en el navegador?")
+                            while not opt:
+                                opt =  messagebox.askyesno(message="Está seguro(a) que sus chats son visibles en el navegador?")
+                                continue 
+
+            auxdata = data.copy()
+            
+            print('opt',opt)
+            if "TIPO_ERROR" in auxdata.columns:
+                auxdata = auxdata[auxdata["TIPO_ERROR"] == "Error del navegador"]
+                
+
+
+
+            if opt and not auxdata.empty:
+                
+                count = 0
+                progress = 0
+                c_dict = {}
+                rejected_rows = []
+                wrong_numbers = []
+
+                for i in numbers:
+                    if i not in c_dict.keys():
+                        c_dict[i] = 0
+                
+                self.progress_bar['value'] = 0
+                self.progress_label_text=f"Enviando 0/{len(numbers)}"
+                
+                for i in range(len(numbers)):
+                    
+                    
+                    if self.sending_flag == 0:
+                        break
+
+                    row  = auxdata[data["NUMERO_TELEFONO"] == numbers[i]]
+                    row = row.iloc[[c_dict[numbers[i]]]] 
+                   
+                    c_dict[numbers[i]]+=1
+                    
+                    message = self.formatter.format_string(self.controller.message,row.iloc[0])
+                    
+                    if self.controller.filepath == "":
+            
+                        if self.sender.send_message(message, formatted_numbers[i],wrong_numbers):
+                            count += 1
+                        
+                        else:
+                            
+                            if formatted_numbers[i] not in wrong_numbers:
+                            
+                                row["TIPO_ERROR"] = "Error del navegador"
+                            
+                            else:
+                                
+                                row["TIPO_ERROR"] = "Num no Existe en Whatsapp"
+                            
+                            rejected_rows.append(row)
+                    
+                            
+                    
+                    
+                    else:
+                        print("Sending file...")
+                        if self.sender.send_file_message(message, formatted_numbers[i],self.controller.filepath,wrong_numbers):
+                            count += 1
+
+                        else:
+
+                            if formatted_numbers[i] not in wrong_numbers:
+                                row["TIPO_ERROR"] = "Error del navegador"
+                            else:
+                                row["TIPO_ERROR"] = "Num no Existe en Whatsapp"
+                            
+                            rejected_rows.append(row)
+
+                    self.progress_bar['value'] = (i+1)*100//len(numbers)
+                    self.progress_label_text = f'Enviando {i+1}/{len(numbers)}'
+
+                messagebox.showinfo(title="Envio Finalizado",message=f"Enviados: {count}\nError: {len(rejected_rows)}")
+                
+                if len(rejected_rows)>0:
+                    df = rejected_rows[0].copy()
+
+                    for i in range(1,len(rejected_rows)):        
+                        df = pd.concat([df,rejected_rows[i]])
+                                                                                                                        #*****_*****_*****_*****_*****_*****
+                    if messagebox.askyesno(message="Desea exportar un archivo con los numeros faltantes?"):    
+                                rejected_file_path = f"{path}Usuarios_rechazados_{datetime.now()}.csv"
+                                df.to_csv(rejected_file_path,index=None)
+                                messagebox.showinfo(title="Archivo generado",message=f"Archivo exportado en {rejected_file_path}")
+
+                    if messagebox.askyesno(message='Desea reenviar los mensajes faltantes?'):
+                        self.send_r(df)
+                self.sending_flag = 0
+                self.drop_progress()
 
     def send_messages(self):
        
@@ -81,14 +243,10 @@ class HomeView(ttk.Frame):
 
             path = f""
             parts = self.controller.filename.split("/")
+            
             for i in range(len(parts)-1):
                     path += f"{parts[i]}/"
-
-            print("Path: ",path)
-            print("FPath: ",self.controller.filename)
-                    
-                
-            
+                        
             numbers, formatted_numbers = self.formatter.format_phone_numbers(list(self.controller.data["NUMERO_TELEFONO"]))
             
             
@@ -96,22 +254,23 @@ class HomeView(ttk.Frame):
             
             if dif>0:
                 messagebox.showinfo(message=f"Numeros de telefono invalidos: {dif}")
-
-            self.sender.connect_with_whatsapp()    
-            opt = False
             
-            messagebox.askokcancel(message="Pulse continuar cuando sus chats son visibles en el navegador")
-            opt = messagebox.askyesno(message="Está seguro(a) que sus chats son visibles en el navegador?")
+            opt = False
+            if not self.sender.check_driver_alive():
+                            self.sender.connect_with_whatsapp()
+                            
+                            messagebox.showinfo(message="Pulse continuar cuando sus chats son visibles en el navegador")
+                            opt =  messagebox.askyesno(message="Está seguro(a) que sus chats son visibles en el navegador?")
+                            while not opt:
+                                opt =  messagebox.askyesno(message="Está seguro(a) que sus chats son visibles en el navegador?")
+                                continue 
+              
+            
             
             auxdata = self.controller.data.copy()
-            
-                
+                            
             if "TIPO_ERROR" in auxdata.columns:
                 auxdata = auxdata[auxdata["TIPO_ERROR"] == "Error del navegador"]
-                
-            
-
-
 
             if opt and not auxdata.empty:
 
@@ -132,7 +291,8 @@ class HomeView(ttk.Frame):
 
                 for i in range(len(numbers)):
                     
-                    print(wrong_numbers,rechazados)
+                    if self.sending_flag == 0:
+                        break
 
                     row  = auxdata[self.controller.data["NUMERO_TELEFONO"] == numbers[i]]
                     row = row.iloc[[c_dict[numbers[i]]]] 
@@ -194,12 +354,10 @@ class HomeView(ttk.Frame):
                             for i in range(1,len(rechazados)):
                                 
                                 df = pd.concat([df,rejected_rows[i]])
-                            
-                            fhora = ""+datetime.now().strftime("%m-%d-%Y-%H%M%S")
-                            fhora = fhora.strip()
-			    
-                            rejected_file_path = f"{path}Usuarios_rechazados_{fhora}.csv"
-                            df.to_csv(path_or_buf=rejected_file_path,index=None)
+                                
+
+                            rejected_file_path = f"{path}Usuarios_rechazados_{datetime.now()}.csv"
+                            df.to_csv(rejected_file_path,index=None)
                             messagebox.showinfo(title="Archivo generado",message=f"Archivo exportado en {rejected_file_path}")
 
 
@@ -276,9 +434,11 @@ class HomeView(ttk.Frame):
             self.sender.quit()
 
 
-    
+
+
     def cancel(self):
-        self.cancel_switch = True
+        self.sending_flag = 0
+        self.down_progress()
 
     
     def update_filename(self):

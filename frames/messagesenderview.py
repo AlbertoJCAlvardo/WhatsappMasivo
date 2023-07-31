@@ -97,7 +97,7 @@ class MessageSenderView(ttk.Frame):
         self.filepath = ""
 
          
-        self.filepath_text = ttk.Entry(self,text="",state="readonly",font=("arial",12))
+        self.filepath_text = ttk.Entry(self,text="",state="readonly",font=("arial",10))
         self.filepath_text.place(x=0,y=0,height=0,width=0)
 
 
@@ -206,8 +206,8 @@ class MessageSenderView(ttk.Frame):
         
     
     def up_filepath(self):
-        self.title_filepath_label.place(x=320,y=490,height=20,width=70)
-        self.filepath_text.place(x=320,y=510,height=40,width=280)
+        self.title_filepath_label.place(x=520,y=490,height=20,width=70)
+        self.filepath_text.place(x=520,y=510,height=30,width=220)
     
     
     def drop_filepath(self):
@@ -218,8 +218,8 @@ class MessageSenderView(ttk.Frame):
 
 
     def up_example(self):
-        self.title_example_label.place(x=20,y=490,height=10,width=70)
-        self.example_text.place(x=20,y=510,height=40,width=280)
+        self.title_example_label.place(x=20,y=460,height=20,width=70)
+        self.example_text.place(x=20,y=490,height=200,width=450)
     
     def drop_example(self):
         self.title_example_label.place(x=0,y=0,height=0,width=0)

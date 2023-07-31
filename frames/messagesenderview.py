@@ -218,7 +218,7 @@ class MessageSenderView(ttk.Frame):
 
 
     def up_example(self):
-        self.title_example_label.place(x=20,y=490,height=20,width=70)
+        self.title_example_label.place(x=20,y=490,height=10,width=70)
         self.example_text.place(x=20,y=510,height=40,width=280)
     
     def drop_example(self):

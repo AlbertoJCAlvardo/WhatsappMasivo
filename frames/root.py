@@ -6,8 +6,8 @@ class Root(ThemedTk):
 
         start_width = 1000
         min_width = 1000
-        start_height = 600
-        min_height = 600
+        start_height = 800
+        min_height = 800
         
         ico = Image.open('logo.png')
         photo = ImageTk.PhotoImage(ico)

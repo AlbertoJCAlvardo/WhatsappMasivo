@@ -97,7 +97,7 @@ class MessageSenderView(ttk.Frame):
         self.filepath = ""
 
          
-        self.filepath_text = ttk.Entry(self,text="",state="readonly",font=("arial",10))
+        self.filepath_text = ttk.Entry(self,text="",state="readonly",font=("arial",12))
         self.filepath_text.place(x=0,y=0,height=0,width=0)
 
 

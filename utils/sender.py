@@ -4,6 +4,7 @@
 """
 
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -19,6 +20,7 @@ class Sender():
 
     def __init__(self,debug=False):
         self.debug = debug
+        self.service = Service()
         self.options = Options()
         self.options.add_experimental_option("excludeSwitches",["enable-logging"])
         self.options.add_argument("--profile-directory=Default")
@@ -30,7 +32,7 @@ class Sender():
 
     def connect_with_whatsapp(self):
         try:
-            self.driver = webdriver.Chrome(ChromeDriverManager(version="114.0.5735.90").install(),options=self.options)    
+            self.driver = webdriver.Chrome(service=self.service,options=self.options)    
             self.driver.get("https://web.whatsapp.com")
         except Exception as e:
             self.style.set_red()

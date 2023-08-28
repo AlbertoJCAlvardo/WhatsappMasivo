@@ -19,8 +19,9 @@ from .style import Style
 class Sender():
 
     def __init__(self,debug=False):
+
         self.debug = debug
-        self.service = Service()
+        self.service = Service(ChromeDriverManager().install())
         self.options = Options()
         self.options.add_experimental_option("excludeSwitches",["enable-logging"])
         self.options.add_argument("--profile-directory=Default")
@@ -48,9 +49,13 @@ class Sender():
                     
                     error = False
                     try:
-                        btn_error_ok = WebDriverWait(self.driver,6).until(EC.element_to_be_clickable((By.XPATH,"//button[@data-testid='popup-controls-ok']")))
+                         
+                        button_xpath = '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[2]/button'
+                        button_error_xpath = '//*[@id="app"]/div/span[2]/div/span/div/div/div/div/div/div[2]/div/button'
+                        btn_error_ok = WebDriverWait(self.driver,6).until(EC.element_to_be_clickable((By.XPATH,button_error_xpath)))
                         sleep(0.3)
                         btn_error_ok.click()
+
                         error = True
                         wrong_number_list.append(number)
                     except Exception as e:
@@ -66,7 +71,7 @@ class Sender():
                                 if not sent:
                                             
                         
-                                    click_btn = WebDriverWait(self.driver,self.delay).until(EC.element_to_be_clickable((By.XPATH, "//button[@data-testid='compose-btn-send']")))
+                                    click_btn = WebDriverWait(self.driver,self.delay).until(EC.element_to_be_clickable((By.XPATH, button_xpath)))
                                     sleep(0.3)
                                     click_btn.click()
                                     sleep(1.2)

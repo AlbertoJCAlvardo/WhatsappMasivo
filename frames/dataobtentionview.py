@@ -58,9 +58,9 @@ class DataObtentionView(ttk.Frame):
 
             filename = filedialog.askopenfilename(initialdir = os.getcwd(),
                                                     title = "Seleccione un Archivo",
-                                                filetypes = (('Todos','*.*'),
-                                                             ("Archivos Excel","*.xlsx"),
-                                                                ("Archivos CSV","*.csv")))
+                                                filetypes = (   ("Archivos Excel","*.xlsx"),
+                                                                ("Archivos CSV","*.csv"),
+                                                                ('Todos','*.*')))
                  
             correct = False
             

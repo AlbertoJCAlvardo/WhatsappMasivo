@@ -115,6 +115,7 @@ class HomeView(ttk.Frame):
         else:
 
             path = f""
+            print(self.controller.filename)
             parts = self.controller.filename.split("/")
             for i in range(len(parts)-1):
                     path += f"{parts[i]}/"

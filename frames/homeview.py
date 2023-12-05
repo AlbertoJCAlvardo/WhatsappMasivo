@@ -119,7 +119,7 @@ class HomeView(ttk.Frame):
         
             print(self.controller.filename)
             separator = "/"
-            if platfrom.system() == "Windows":
+            if platform.system() == "Windows":
                 separator = "\\"
             
             parts = self.controller.filename.split(separator)

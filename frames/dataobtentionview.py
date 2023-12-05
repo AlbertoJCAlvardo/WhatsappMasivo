@@ -65,7 +65,7 @@ class DataObtentionView(ttk.Frame):
             correct = False
             
             
-            print(filename)
+            
             if filename.split(".")[len(filename.split('.')) - 1] == "xlsx":
                     
                 data = pd.read_excel(filename)
@@ -135,8 +135,9 @@ class DataObtentionView(ttk.Frame):
                 
                 self.controller.data = self.data
                 self.controller.update_list()
-                self.controller.filename = fnl[len(fnl) - 1]
-                
+                self.controller.filename = filename
+                self.controller.filepath = fnl
+                print('filepath', self.controller.filepath)
                     
         except Exception as e:
             print(e)

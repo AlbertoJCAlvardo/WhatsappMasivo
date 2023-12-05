@@ -117,14 +117,16 @@ class HomeView(ttk.Frame):
 
             path = f""
         
-            print(self.controller.filename)
+            print('filepath',self.controller.filepath)
             separator = "/"
             if platform.system() == "Windows":
                 separator = "\\"
             
-            parts = self.controller.filename.split(separator)
+            parts = self.controller.filename.split('/')
+            print('parts',parts)
             for i in range(len(parts)-1):
-                    path += f"{parts[i]}{separator}"
+                    path += f"{parts[i]}/"
+                    print(path)
                     
             if data is None:
                 data = self.controller.data    
@@ -231,7 +233,7 @@ class HomeView(ttk.Frame):
                         df = pd.concat([df,rejected_rows[i]])
                                                                                                                         #*****_*****_*****_*****_*****_*****
                     if messagebox.askyesno(message="Desea exportar un archivo con los numeros faltantes?"):    
-                                rejected_file_path = f"{path}Usuarios_rechazados_{datetime.now()}.csv"
+                                rejected_file_path = f"{path}Usuarios_rechazados_{datetime.now().strftime('%y-%m-%d_%H-%M-%S')}.csv"
                                 df.to_csv(rejected_file_path,index=None)
                                 messagebox.showinfo(title="Archivo generado",message=f"Archivo exportado en {rejected_file_path}")
 
@@ -363,7 +365,7 @@ class HomeView(ttk.Frame):
                                 df = pd.concat([df,rejected_rows[i]])
                                 
 
-                            rejected_file_path = f"{path}Usuarios_rechazados_{datetime.now()}.csv"
+                            rejected_file_path = f"{path}Usuarios_rechazados_{datetime.now().strftime('%y-%m-%d_%H:%M%S')}.csv"
                             df.to_csv(rejected_file_path,index=None)
                             messagebox.showinfo(title="Archivo generado",message=f"Archivo exportado en {rejected_file_path}")
 
@@ -454,7 +456,8 @@ class HomeView(ttk.Frame):
         self.file_entry.delete(0,END)
         self.file_entry.insert(0,self.controller.filename)
         self.file_entry.config(state="readonly")
-
+    def update_filepath(self):
+        print('')
     
     def update_message(self):
         self.message_entry.config(state="normal")

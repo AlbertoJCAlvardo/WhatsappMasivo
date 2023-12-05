@@ -14,7 +14,7 @@ class View(Frame):
         self.message = f""
         self.filename = f""
         self.filepath = f""
-        self.data_path = ""
+        self.data_path = f""
 
         self.candidate = None
         self.pack(side='top', fill="both",expand=True)
@@ -56,7 +56,9 @@ class View(Frame):
     def update_filename(self):
         self.message = None
         self.frames[HomeView].update_filename()
-    
+    def update_filepath(self,filepath):
+        self.message = None
+        self.frames[HomeView].update_filepath(filepath)
     def update_root(self):
         self.root.update()
 

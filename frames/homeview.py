@@ -7,6 +7,7 @@ import pandas as pd
 from time import sleep
 from datetime import datetime
 from threading import Thread
+import platform
 
 
 class HomeView(ttk.Frame):
@@ -115,10 +116,15 @@ class HomeView(ttk.Frame):
         else:
 
             path = f""
+        
             print(self.controller.filename)
-            parts = self.controller.filename.split("/")
+            separator = "/"
+            if platfrom.system() == "Windows":
+                separator = "\"
+            
+            parts = self.controller.filename.split(separator)
             for i in range(len(parts)-1):
-                    path += f"{parts[i]}/"
+                    path += f"{parts[i]}{separator}"
                     
             if data is None:
                 data = self.controller.data    
